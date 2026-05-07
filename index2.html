@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm Kiến Thức Máy Tính</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #000000; /* Nền đen hoàn toàn */
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Dòng chữ phát sáng */
+        .glow-container {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .glow-text {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff, 0 0 40px #0ea5e9;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.8; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .quiz-container {
+            background: #000000;
+            border: 3px solid #00d2ff; /* Viền xanh da trời rực rỡ */
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.3);
+            text-align: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            color: #00d2ff;
+            font-weight: bold;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .option-btn {
+            background: #000000;
+            color: #ffffff;
+            border: 2px solid #00d2ff;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        /* Hiệu ứng rê chuột qua: Full màu xanh da trời */
+        .option-btn:hover:not(:disabled) {
+            background: #00d2ff;
+            color: #000;
+            box-shadow: 0 0 20px #00d2ff;
+            transform: translateY(-3px);
+        }
+
+        .correct {
+            background: #059669 !important;
+            border-color: #10b981 !important;
+            color: white !important;
+            animation: jump 0.5s ease;
+        }
+
+        .incorrect {
+            background: #e11d48 !important;
+            border-color: #f43f5e !important;
+            color: white !important;
+            animation: shake 0.5s ease;
+        }
+
+        #next-btn, #restart-btn {
+            margin-top: 30px;
+            background: #00d2ff;
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            display: none;
+            text-transform: uppercase;
+        }
+
+        @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+
+        .result-screen { display: none; }
+        .result-score { font-size: 4rem; color: #00d2ff; font-weight: 800; margin: 20px 0; }
+
+        @media (max-width: 600px) { .options-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="glow-container">
+        <h1 class="glow-text">Bài test sau khi nghe giảng đâyyy!!!</h1>
+    </div>
+
+    <div class="quiz-container">
+        <div id="quiz-screen">
+            <div class="header">
+                <div>CÂU HỎI <span id="current-q">1</span>/10</div>
+                <div>ĐIỂM: <span id="score">0</span></div>
+            </div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <div class="options-grid" id="options"></div>
+            <button id="next-btn" onclick="nextQuestion()">TIẾP THEO ❯</button>
+        </div>
+
+        <div class="result-screen" id="result-screen">
+            <h2>KẾT QUẢ CUỐI CÙNG</h2>
+            <div class="result-score"><span id="final-score">0</span> / 10</div>
+            <div id="result-comment" style="margin-bottom: 25px; font-size: 1.2rem;"></div>
+            <button id="restart-btn" style="display: inline-block;" onclick="restartQuiz()">LÀM LẠI ↻</button>
+        </div>
+    </div>
+
+    <script>
+        const originalQuestions = [
+            { q: "Mọi dữ liệu trong máy tính đều được số hóa dưới dạng gì?", o: ["Dãy các bit", "Các chữ số từ 0-9", "Các ký hiệu toán học", "Dòng điện xoay chiều"], a: 0 },
+            { q: "Có bao nhiêu phép toán bit cơ sở được nhắc tới?", o: ["2 phép", "3 phép", "4 phép", "5 phép"], a: 2 },
+            { q: "Phép toán bit nào cho kết quả trái ngược với đầu vào?", o: ["AND", "OR", "NOT", "XOR"], a: 2 },
+            { q: "Phép toán AND cho kết quả là 1 khi nào?", o: ["Ít nhất một bit là 1", "Cả hai bit đều là 1", "Hai bit khác nhau", "Cả hai bit đều là 0"], a: 1 },
+            { q: "Hệ đếm nhị phân sử dụng cơ số mấy?", o: ["Cơ số 10", "Cơ số 16", "Cơ số 2", "Cơ số 8"], a: 2 },
+            { q: "Trong máy tính, trạng thái 'Bật' (có dòng điện) tương ứng với bit nào?", o: ["Bit 0", "Bit 1", "Bit 2", "Cả 0 và 1"], a: 1 },
+            { q: "Phép toán XOR cho kết quả là 1 khi nào?", o: ["Hai bit giống nhau", "Hai bit trái ngược nhau", "Cả hai bit đều là 1", "Cả hai bit đều là 0"], a: 1 },
+            { q: "Phép toán nào còn được gọi là phép cộng logic?", o: ["Phép AND", "Phép OR", "Phép NOT", "Phép XOR"], a: 1 },
+            { q: "Hệ đếm nào được con người sử dụng phổ biến nhất hàng ngày?", o: ["Hệ nhị phân", "Hệ thập lục phân", "Hệ bát phân", "Hệ thập phân"], a: 3 },
+            { q: "Khi cộng nhị phân, nếu tổng một cột vượt quá giá trị 1 bit, ta làm gì?", o: ["Viết 1 nhớ 0", "Viết 0 nhớ 1 sang trái", "Viết 1 nhớ 1", "Bỏ qua kết quả đó"], a: 1 }
+        ];
+
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let canClick = true;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initQuiz() {
+            questions = shuffle([...originalQuestions]);
+            currentIdx = 0; score = 0;
+            document.getElementById('score').innerText = "0";
+            document.getElementById('quiz-screen').style.display = 'block';
+            document.getElementById('result-screen').style.display = 'none';
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            canClick = true;
+            document.getElementById('next-btn').style.display = 'none';
+            const item = questions[currentIdx];
+            document.getElementById('current-q').innerText = currentIdx + 1;
+            document.getElementById('question').innerText = item.q;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            item.o.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.classList.add('option-btn');
+                btn.onclick = () => check(btn, i);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function check(btn, idx) {
+            if (!canClick) return;
+            canClick = false;
+            const correct = questions[currentIdx].a;
+            const all = document.querySelectorAll('.option-btn');
+            all.forEach(b => b.disabled = true);
+            if (idx === correct) {
+                btn.classList.add('correct');
+                score++;
+                document.getElementById('score').innerText = score;
+            } else {
+                btn.classList.add('incorrect');
+                all[correct].classList.add('correct');
+            }
+            document.getElementById('next-btn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < questions.length) loadQuestion();
+            else showResult();
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('final-score').innerText = score;
+            const cmts = ["Thiên tài nhị phân!", "Bạn xử lý bit quá mượt!", "Kiến thức rất tốt!", "Cần ôn lại bảng chân trị nhé!", "Máy tính đang khóc vì bạn đấy!"];
+            let msg = score === 10 ? cmts[0] : (score >= 8 ? cmts[1] : (score >= 5 ? cmts[2] : cmts[3]));
+            document.getElementById('result-comment').innerText = msg;
+        }
+
+        function restartQuiz() { initQuiz(); }
+
+        initQuiz();
+    </script>
+</body>
+</html>
